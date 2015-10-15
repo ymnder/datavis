@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="UTF-8">
+	<title>cigarette caliculator</title>
+	<script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.4.13/d3.min.js"></script>
+</head>
+<style>
+.bar {
+  fill: steelblue;
+}
+
+.bar:hover {
+  fill: brown;
+}
+
+.axis {
+  font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path {
+  display: none;
+}
+</style>
+<body>
+
+<select name="cig_price" id="select_price">
+	<option value="420">420円</option>
+	<option value="430">430円</option>
+	<option value="440">440円</option>
+	<option value="450">450円</option>
+	<option value="460">460円</option>
+</select>
+<select name="cig_quantity" id="select_quantity">
+	<option value="1">1本</option>
+	<option value="2">2本</option>
+	<option value="3">3本</option>
+</select>
+<script>
+
+function calcPayment(price, cig_perday) {
+	var cig_total = price * cig_perday * 365;
+	var future = 50; //五十年後まで
+	var pay_history = [];
+	for (var i = 0; future > i; i++) {
+		pay_history[i] = {};
+		pay_history[i].total = cig_total * (i+1) ;
+		pay_history[i].year = i+1 ;
+	};
+	//console.dir(pay_history);
+	var margin = {top:20, right:20, bottom:30, left:60},
+		width = 960 - margin.left - margin.right,
+		height = 500 - margin.top - margin.bottom;
+
+	var x = d3.scale.ordinal().rangeRoundBands([0,width], .1);
+	var y = d3.scale.linear().range([height,0]);
+
+	var xAxis = d3.svg.axis().scale(x).orient('bottom');
+	var yAxis = d3.svg.axis().scale(y).orient('left').ticks(10);
+	//あとでappend消す
+	var svg = d3.select('body').append('svg')
+		.attr('width', width + margin.left + margin.right)
+		.attr('height', height + margin.top + margin.bottom)
+		.append('g')
+		.attr('transform','translate(' + margin.left + ',' + margin.top + ')')
+
+	x.domain(pay_history.map(function(d){return d.year;}));
+	y.domain([0, d3.max(pay_history, function(d){return d.total;})]);
+
+	svg.append('g')
+		.attr('class', 'x axis')
+		.attr('transform','translate(0,' + height + ')')
+		.call(xAxis)
+	;
+
+	var a = svg.append('g')
+		.attr('class', 'y axis')
+		.call(yAxis);
+
+	a.append('text')
+			.attr('id','side')
+			.attr('transform', 'rotate(-90)')
+			.attr('y', 6)
+			.attr('dy', '7px')
+			.attr('text-anchor','end')
+			.text('aaaa')
+	;
+
+	svg.selectAll('.bar')
+		.data(pay_history)
+		.enter().append('rect')
+			.attr('class', 'bar')
+			.attr('x', function(d){return x(d.year)})
+			.attr('width', x.rangeBand())
+			.attr('y', function(d){return y(d.total)})
+			.attr('height', function(d){return height - y(d.total)})
+	;
+
+	// svg.selectAll('.databox')
+	// 	.data(pay_history)
+	// 	.enter().append('rect')
+	// 		.attr('display','none')
+	// 		.attr('class', 'databox')
+	// 		.attr('width', 100)
+	// 		.attr('x', function(d){return x(d.year)})
+	// 		.attr('y', function(d){return y(d.total) - 50})
+	// 		.attr('height', 40)
+	// ;
+	// $('.bar').hover(
+	// 	function(){
+	// 		$('.databox').css('display','block')
+	// 	},
+	// 	function(){
+	// 		$('.databox').css('display','none')
+	// 	});
+
+}
+function showGraph(price, cig_perday) {
+	var cig_total = price * cig_perday * 365;
+	var future = 50; //五十年後まで
+	var paid_history = [];
+	for (var i = 0; future > i; i++) {
+		paid_history[i] = {};
+		paid_history[i].total = cig_total * (i+1) ;
+		paid_history[i].year = i+1 ;
+	};
+	//console.dir(pay_history);
+	var margin = {top:20, right:20, bottom:30, left:60},
+		width = 960 - margin.left - margin.right,
+		height = 500 - margin.top - margin.bottom;
+
+	var x = d3.scale.ordinal().rangeRoundBands([0,width], .1);
+	var y = d3.scale.linear().range([height,0]);
+
+	var xAxis = d3.svg.axis().scale(x).orient('bottom');
+	var yAxis = d3.svg.axis().scale(y).orient('left').ticks(10);
+	
+	var svg = d3.select('svg')
+
+	x.domain(paid_history.map(function(d){return d.year;}));
+	y.domain([0, d3.max(pay_history, function(d){return d.total;})]);
+
+	svg.select('.x axis')
+		// .attr('class', 'x axis')
+		// .attr('transform','translate(0,' + height + ')')
+		.call(xAxis)
+	;
+
+	var a = svg.select('.y axis')
+		//.attr('class', 'y axis')
+		.call(yAxis);
+
+	a.select('#side')
+			//.attr('transform', 'rotate(-90)')
+			//.attr('y', 6)
+			//.attr('dy', '7px')
+			//.attr('text-anchor','end')
+			.text('aaaa')
+	;
+
+	svg.selectAll('.bar')
+		.data(paid_history)
+		.enter()
+			//.attr('x', function(d){return x(d.year)})
+			.attr('y', function(d){return y(d.total)})
+			.attr('height', function(d){return height - y(d.total)})
+	;
+
+}
+
+function changePrice() {
+	$('#select_price,#select_quantity').change(function(){
+		console.dir($('#select_price').val());
+		//console.dir($('#select_quantity').val());
+		var my_price = $('#select_price').val();
+		var my_quantity = $('#select_quantity').val();
+
+		showGraph(my_price, my_quantity);
+	});
+}
+
+$('document').ready(function(){
+	calcPayment(460,3);
+	changePrice();
+});
+</script>
+</body>
+</html>
