@@ -168,7 +168,7 @@ function showGraph(price, cig_perday) {
 
 	svg.selectAll('.bar')
 		.data(paid_history)
-		.enter()
+		// .enter()
 			//.attr('x', function(d){return x(d.year)})
 			.attr('y', function(d){return y(d.total)})
 			.attr('height', function(d){return height - y(d.total)})
