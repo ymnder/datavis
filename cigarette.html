@@ -146,7 +146,7 @@ function showGraph(price, cig_perday) {
 	var svg = d3.select('svg')
 
 	x.domain(paid_history.map(function(d){return d.year;}));
-	y.domain([0, d3.max(pay_history, function(d){return d.total;})]);
+	y.domain([0, d3.max(paid_history, function(d){return d.total;})]);
 
 	svg.select('.x axis')
 		// .attr('class', 'x axis')
