@@ -6,7 +6,6 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 	<script src="http://d3js.org/d3.v3.js"></script>
@@ -15,13 +14,26 @@
 	<style media="screen">
 		ul {
 			margin-bottom: 0px;
+			padding-left: 0px;
 		}
 		li {
     		list-style: none;
 		}
-		.container{
-			margin-right: 10%;
-			margin-left: 10%;
+		footer {
+		    text-align: center;
+		    background-color: lightgray;
+		    margin-top: 20px;
+		    padding-top: 20px;
+		    padding-bottom: 10px;
+		}
+
+		#select-box-are {
+    		margin-bottom: 20px;
+		}
+		.table {
+			width: 80%;
+			max-width: 80%;
+			margin: auto;
 		}
 		.highlight {
 		    padding: 9px 14px;
@@ -36,25 +48,55 @@
 			stroke: black;
 			shape-rendering: crispEdges;
 		}
+		#chart {
+			text-align: center;
+		}
+		.container {
+			margin: 40px 0px;
+		}
 		.plots {
-			fill: orange;
+			/*fill: orange;*/
 			opacity: 0.5;
+		}
+		#tooltip{
+			position: absolute;
+			z-index: 10;
+			visibility: hidden;
+			padding: 5px;
+			/*border: 1px solid #000;*/
+			border-radius: 3px;
+			background-color: black;
+			color: white;
+			font-size: 11px;
+			/*opacity: 0.8;*/
+		}
+		line.trendline {
+    		pointer-events: none;
+		}
+		.page-header {
+			text-align: center;
 		}
 	</style>
 </head>
 <body>
-	<div class="container">
-        <h1>回帰直線と散布図</h1>
-        <p class="lead">データを選んで楽しく描画</p>
-    </div>
+	<div class="page-header">
+  		<h1>回帰直線と散布図</h1>
+		<p class="lead">データを選んで楽しく描画</p>
+	</div>
 	<div class="container">
 		<div id="select-box-are">
-			<span>x列</span>
-			<select class="xval select-val" name="xval">
-			</select>
-			<span>y列</span>
-			<select class="yval select-val" name="yval">
-			</select>
+			<div class="form-inline">
+			  <!-- <div class="form-group"> -->
+			    <div class="input-group">
+			      <div class="input-group-addon">x軸</div>
+			      <select class="xval select-val form-control" name="xval"></select>
+			    </div>
+				<div class="input-group">
+				  <div class="input-group-addon">y軸</div>
+				  <select class="yval select-val form-control" name="yval"></select>
+				</div>
+			  <!-- </div> -->
+		  </div>
 		</div>
 		<div class="highlight">
 			<ul id="info">
@@ -67,65 +109,83 @@
 					<g class="reg-area"></g>
 				</g>
 			</svg>
+			<span id="tooltip"></span>
 		</div>
 	</div>
+	<div class="container">
+		<!-- <div class="highlight">
+			<h5 class="">選択したデータ表</h5>
+		</div> -->
+		<table class="table table-bordered table-hover" id="table-area"></table>
+	</div>
+	<footer class="footer">
+      <div class="container">
+        <p class="text-muted">使用上の注意をよく読み、用法・用量を守って正しくお使い下さい。</p>
+      </div>
+    </footer>
 </body>
 <script>
 var pref_arr =
 [
-{'id':1, 'pref':'北海道'},
-{'id':2, 'pref':'青森県'},
-{'id':3, 'pref':'岩手県'},
-{'id':4, 'pref':'宮城県'},
-{'id':5, 'pref':'秋田県'},
-{'id':6, 'pref':'山形県'},
-{'id':7, 'pref':'福島県'},
-{'id':8, 'pref':'茨城県'},
-{'id':9, 'pref':'栃木県'},
-{'id':10, 'pref':'群馬県'},
-{'id':11, 'pref':'埼玉県'},
-{'id':12, 'pref':'千葉県'},
-{'id':13, 'pref':'東京都'},
-{'id':14, 'pref':'神奈川県'},
-{'id':15, 'pref':'新潟県'},
-{'id':16, 'pref':'富山県'},
-{'id':17, 'pref':'石川県'},
-{'id':18, 'pref':'福井県'},
-{'id':19, 'pref':'山梨県'},
-{'id':20, 'pref':'長野県'},
-{'id':21, 'pref':'岐阜県'},
-{'id':22, 'pref':'静岡県'},
-{'id':23, 'pref':'愛知県'},
-{'id':24, 'pref':'三重県'},
-{'id':25, 'pref':'滋賀県'},
-{'id':26, 'pref':'京都府'},
-{'id':27, 'pref':'大阪府'},
-{'id':28, 'pref':'兵庫県'},
-{'id':29, 'pref':'奈良県'},
-{'id':30, 'pref':'和歌山県'},
-{'id':31, 'pref':'鳥取県'},
-{'id':32, 'pref':'島根県'},
-{'id':33, 'pref':'岡山県'},
-{'id':34, 'pref':'広島県'},
-{'id':35, 'pref':'山口県'},
-{'id':36, 'pref':'徳島県'},
-{'id':37, 'pref':'香川県'},
-{'id':38, 'pref':'愛媛県'},
-{'id':39, 'pref':'高知県'},
-{'id':40, 'pref':'福岡県'},
-{'id':41, 'pref':'佐賀県'},
-{'id':42, 'pref':'長崎県'},
-{'id':43, 'pref':'熊本県'},
-{'id':44, 'pref':'大分県'},
-{'id':45, 'pref':'宮崎県'},
-{'id':46, 'pref':'鹿児島県'},
-{'id':47, 'pref':'沖縄県'},
+	{'id':1, 'pref':'北海道','color':'#e41a1c'},
+	{'id':2, 'pref':'青森県','color':'#377eb8'},
+	{'id':3, 'pref':'岩手県','color':'#377eb8'},
+	{'id':4, 'pref':'宮城県','color':'#377eb8'},
+	{'id':5, 'pref':'秋田県','color':'#377eb8'},
+	{'id':6, 'pref':'山形県','color':'#377eb8'},
+	{'id':7, 'pref':'福島県','color':'#377eb8'},
+	{'id':8, 'pref':'茨城県','color':'#4daf4a'},
+	{'id':9, 'pref':'栃木県','color':'#4daf4a'},
+	{'id':10, 'pref':'群馬県','color':'#4daf4a'},
+	{'id':11, 'pref':'埼玉県','color':'#4daf4a'},
+	{'id':12, 'pref':'千葉県','color':'#4daf4a'},
+	{'id':13, 'pref':'東京都','color':'#4daf4a'},
+	{'id':14, 'pref':'神奈川県','color':'#4daf4a'},
+	{'id':15, 'pref':'新潟県','color':'#984ea3'},
+	{'id':16, 'pref':'富山県','color':'#984ea3'},
+	{'id':17, 'pref':'石川県','color':'#984ea3'},
+	{'id':18, 'pref':'福井県','color':'#984ea3'},
+	{'id':19, 'pref':'山梨県','color':'#984ea3'},
+	{'id':20, 'pref':'長野県','color':'#984ea3'},
+	{'id':21, 'pref':'岐阜県','color':'#984ea3'},
+	{'id':22, 'pref':'静岡県','color':'#984ea3'},
+	{'id':23, 'pref':'愛知県','color':'#984ea3'},
+	{'id':24, 'pref':'三重県','color':'#ff7f00'},
+	{'id':25, 'pref':'滋賀県','color':'#ff7f00'},
+	{'id':26, 'pref':'京都府','color':'#ff7f00'},
+	{'id':27, 'pref':'大阪府','color':'#ff7f00'},
+	{'id':28, 'pref':'兵庫県','color':'#ff7f00'},
+	{'id':29, 'pref':'奈良県','color':'#ff7f00'},
+	{'id':30, 'pref':'和歌山県','color':'#ff7f00'},
+	{'id':31, 'pref':'鳥取県','color':'#ffff33'},
+	{'id':32, 'pref':'島根県','color':'#ffff33'},
+	{'id':33, 'pref':'岡山県','color':'#ffff33'},
+	{'id':34, 'pref':'広島県','color':'#ffff33'},
+	{'id':35, 'pref':'山口県','color':'#ffff33'},
+	{'id':36, 'pref':'徳島県','color':'#a65628'},
+	{'id':37, 'pref':'香川県','color':'#a65628'},
+	{'id':38, 'pref':'愛媛県','color':'#a65628'},
+	{'id':39, 'pref':'高知県','color':'#a65628'},
+	{'id':40, 'pref':'福岡県','color':'#f781bf'},
+	{'id':41, 'pref':'佐賀県','color':'#f781bf'},
+	{'id':42, 'pref':'長崎県','color':'#f781bf'},
+	{'id':43, 'pref':'熊本県','color':'#f781bf'},
+	{'id':44, 'pref':'大分県','color':'#f781bf'},
+	{'id':45, 'pref':'宮崎県','color':'#f781bf'},
+	{'id':46, 'pref':'鹿児島県','color':'#f781bf'},
+	{'id':47, 'pref':'沖縄県','color':'#f781bf'},
 ];
 var c = {
 	setChartArea: function(){
-		c.margin = {top: 20, right: 20, bottom: 30, left: 50};
-		c.width = 500 - c.margin.left - c.margin.right,
-		c.height = 500 - c.margin.top - c.margin.bottom;
+		var base = ~~($('#chart').width())
+		if(base >= 400){
+			base = 400;
+		}else{
+			$('#chart').width() * 0.8;
+		}
+		c.margin = {top: 20, right: 20, bottom: 30, left: 30};
+		c.width = base - c.margin.left - c.margin.right,
+		c.height = base - c.margin.top - c.margin.bottom;
 		var svg = d3.select("#regplot")
 			.attr("width", c.width + c.margin.left + c.margin.right)
 			.attr("height", c.height + c.margin.top + c.margin.bottom)
@@ -147,30 +207,51 @@ var c = {
 		c.xAxis = d3.svg.axis()
 			.scale(c.x)
 			.orient("bottom")
+			.outerTickSize(0)
 			.ticks(5);
 
 		c.yAxis = d3.svg.axis()
 			.scale(c.y)
 			.orient("left")
+			.outerTickSize(0)
 			.ticks(5);
 	},
 	drawAxis: function(){
 		var svg = d3.select("#chartarea");
 
 		svg.append("g")
-			 .attr("class", "x axis")
-			 .attr("transform", "translate(0," + c.height + ")")
-			 .call(c.xAxis);
+			.attr("class", "x axis")
+			.attr("transform", "translate(0," + c.height + ")")
+			.call(c.xAxis)
+			.append("text")
+			.attr("x", c.width-10)
+			.attr("y", -6)
+			.style("text-anchor", "end")
+			.text("x");
+
+		svg.append("svg:path")
+			.attr("transform", "translate("+ c.width+","+c.height+") rotate(90)")
+			.attr("d", d3.svg.symbol().type("triangle-up"));
 
 		svg.append("g")
-			 .attr("class", "y axis")
-			 .call(c.yAxis);
+			.attr("class", "y axis")
+			.call(c.yAxis)
+			.append("text")
+			.attr("y", 6)
+			.attr("x", 15)
+			.attr("dy", ".71em")
+			.style("text-anchor", "end")
+			.text("y")
+			;
+		svg.append("svg:path")
+		.attr("d", d3.svg.symbol().type("triangle-up"));
 	},
 	drawPlot: function(){
 
 		var svg = d3.select("#chartarea");
 		var dataset = c.alltsv;
 
+		var tooltip = d3.select("#tooltip");
 		var plotarea = svg.select('.plot-area')
 						.selectAll(".plots")
 		     			.data(dataset)
@@ -179,7 +260,19 @@ var c = {
 			.enter()
 			.append("circle")
 			.attr('class', 'plots')
-			.attr("r", 10);
+			.attr('fill', function(d){
+				return pref_arr.filter(function(e){ return e.pref === d.pref})[0].color;
+			})
+			.attr("r", 5)
+			.on("mouseover", function(d){
+				return tooltip.style("visibility", "visible").text(d.pref);
+			})
+    		.on("mousemove", function(d){
+				return tooltip.style("top", (event.pageY-20)+"px").style("left",(event.pageX+10)+"px");
+			})
+    		.on("mouseout", function(d){
+				return tooltip.style("visibility", "hidden");
+			});
 
 		plotarea.transition()
 			.duration(1000)
@@ -213,7 +306,7 @@ var c = {
 			.attr("class", "trendline")
 			.attr("stroke", "black")
 			.attr("stroke-width", 1);
-			
+
 		trendline
 			.transition()
 			.duration(1000)
@@ -227,8 +320,8 @@ var c = {
 		d3.selectAll("g.y.axis").call(c.yAxis)
 
 		var str = ''
-		str += '<li><div>回帰直線:  <span class="outputinfo">y = '+ regline.m + 'x + ' + regline.b +'</span></div></li>';
-		str += '<li><div>相関係数:  <span class="outputinfo">'+ correlation  + '</span></div></li>';
+		str += '<li><div>回帰直線:  <strong>y = '+ regline.m + 'x + ' + regline.b +'</strong></div></li>';
+		str += '<li><div>相関係数:  <strong>'+ correlation  + '</strong></div></li>';
 		$('#info').html(str);
 	},
 	getData: function(success){
@@ -238,9 +331,10 @@ var c = {
 				prop.map(function(e){
 					d[e] = +d[e];
 				})
+				d.pref_id = pref_arr.filter(function(e){return e.pref === d.pref})[0].id;
 			});
 
-			c.alltsv = data;
+			c.alltsv = _.sortByOrder(data, 'pref_id')
 
 
 			success();
@@ -266,7 +360,7 @@ var c = {
 		var prop = _.keys(c.alltsv[0]);
 		var str = '';
 		prop.map(function(d){
-			if(d==='pref') return;
+			if(d.indexOf('pref')===0) return;
 			str += '<option value="'+d+'">'+ d +'</option>';
 		})
 		$('.xval').html(str);
@@ -278,6 +372,27 @@ var c = {
 		c.setAxis();
 		c.drawPlot()
 		c.drawRegression();
+		c.showTable()
+	},
+	showTable: function(){
+		var str = ''
+		str += '<thead><tr>'
+		str += '<th>id</th><th>都道府県</th>';
+		str += '<th>' + c.prop_arr[0] + '</th><th>' + c.prop_arr[1] + '</th>' ;
+		str += '</tr></thead>';
+		str += '<tbody>'
+
+		c.alltsv.map(function(d){
+			str += '<tr>'
+			str += '<th scope="row">'+d.pref_id+'</th>'
+			str += '<td>'+d.pref+'</td>'
+			str += '<td>'+d[c.prop_arr[0]]+'</td>'
+			str += '<td>'+d[c.prop_arr[1]]+'</td>'
+			str += '</tr>'
+		});
+		str += '</tbody>'
+
+		$('#table-area').html(str);
 	},
 	init: function(){
 		c.getData(function(){
@@ -288,6 +403,7 @@ var c = {
 			c.drawAxis();
 			c.drawPlot()
 			c.drawRegression();
+			c.showTable()
 		});
 		$('.xval').on('change', function(s){
 			var prop = [this.value, $('.yval').val()];
