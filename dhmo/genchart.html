@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="jp">
+<head>
+	<meta charset="UTF-8">
+	<title>Discover meaningful dataset</title>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+	<script src="http://d3js.org/d3.v3.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/simple-statistics/1.0.0/simple_statistics.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.10.1/lodash.min.js"></script>
+	<style media="screen">
+		ul {
+			margin-bottom: 0px;
+		}
+		li {
+    		list-style: none;
+		}
+		.container{
+			margin-right: 10%;
+			margin-left: 10%;
+		}
+		.highlight {
+		    padding: 9px 14px;
+		    margin-bottom: 14px;
+		    background-color: #f7f7f9;
+		    border: 1px solid #e1e1e8;
+		    border-radius: 4px;
+		}
+		.axis path,
+		.axis line {
+			fill: none;
+			stroke: black;
+			shape-rendering: crispEdges;
+		}
+		.plots {
+			fill: orange;
+			opacity: 0.5;
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+        <h1>回帰直線と散布図</h1>
+        <p class="lead">データを選んで楽しく描画</p>
+    </div>
+	<div class="container">
+		<div id="select-box-are">
+			<span>x列</span>
+			<select class="xval select-val" name="xval">
+			</select>
+			<span>y列</span>
+			<select class="yval select-val" name="yval">
+			</select>
+		</div>
+		<div class="highlight">
+			<ul id="info">
+			</ul>
+		</div>
+		<div id="chart">
+			<svg id="regplot">
+				<g id ="chartarea">
+					<g class="plot-area"></g>
+					<g class="reg-area"></g>
+				</g>
+			</svg>
+		</div>
+	</div>
+</body>
+<script>
+var pref_arr =
+[
+{'id':1, 'pref':'北海道'},
+{'id':2, 'pref':'青森県'},
+{'id':3, 'pref':'岩手県'},
+{'id':4, 'pref':'宮城県'},
+{'id':5, 'pref':'秋田県'},
+{'id':6, 'pref':'山形県'},
+{'id':7, 'pref':'福島県'},
+{'id':8, 'pref':'茨城県'},
+{'id':9, 'pref':'栃木県'},
+{'id':10, 'pref':'群馬県'},
+{'id':11, 'pref':'埼玉県'},
+{'id':12, 'pref':'千葉県'},
+{'id':13, 'pref':'東京都'},
+{'id':14, 'pref':'神奈川県'},
+{'id':15, 'pref':'新潟県'},
+{'id':16, 'pref':'富山県'},
+{'id':17, 'pref':'石川県'},
+{'id':18, 'pref':'福井県'},
+{'id':19, 'pref':'山梨県'},
+{'id':20, 'pref':'長野県'},
+{'id':21, 'pref':'岐阜県'},
+{'id':22, 'pref':'静岡県'},
+{'id':23, 'pref':'愛知県'},
+{'id':24, 'pref':'三重県'},
+{'id':25, 'pref':'滋賀県'},
+{'id':26, 'pref':'京都府'},
+{'id':27, 'pref':'大阪府'},
+{'id':28, 'pref':'兵庫県'},
+{'id':29, 'pref':'奈良県'},
+{'id':30, 'pref':'和歌山県'},
+{'id':31, 'pref':'鳥取県'},
+{'id':32, 'pref':'島根県'},
+{'id':33, 'pref':'岡山県'},
+{'id':34, 'pref':'広島県'},
+{'id':35, 'pref':'山口県'},
+{'id':36, 'pref':'徳島県'},
+{'id':37, 'pref':'香川県'},
+{'id':38, 'pref':'愛媛県'},
+{'id':39, 'pref':'高知県'},
+{'id':40, 'pref':'福岡県'},
+{'id':41, 'pref':'佐賀県'},
+{'id':42, 'pref':'長崎県'},
+{'id':43, 'pref':'熊本県'},
+{'id':44, 'pref':'大分県'},
+{'id':45, 'pref':'宮崎県'},
+{'id':46, 'pref':'鹿児島県'},
+{'id':47, 'pref':'沖縄県'},
+];
+var c = {
+	setChartArea: function(){
+		c.margin = {top: 20, right: 20, bottom: 30, left: 50};
+		c.width = 500 - c.margin.left - c.margin.right,
+		c.height = 500 - c.margin.top - c.margin.bottom;
+		var svg = d3.select("#regplot")
+			.attr("width", c.width + c.margin.left + c.margin.right)
+			.attr("height", c.height + c.margin.top + c.margin.bottom)
+			.select("#chartarea")
+			.attr("transform", "translate(" + c.margin.left + "," + c.margin.top + ")");
+	},
+	setAxis: function(){
+
+		var dataset = c.alltsv;
+
+		c.x = d3.scale.linear()
+			.domain([0, d3.max(dataset, function(d) { return d[c.prop_arr[0]]; })])
+			.range([0, c.width]);
+
+		c.y = d3.scale.linear()
+			.domain([0, d3.max(dataset, function(d) { return d[c.prop_arr[1]]; })])
+			.range([c.height, 0]);
+
+		c.xAxis = d3.svg.axis()
+			.scale(c.x)
+			.orient("bottom")
+			.ticks(5);
+
+		c.yAxis = d3.svg.axis()
+			.scale(c.y)
+			.orient("left")
+			.ticks(5);
+	},
+	drawAxis: function(){
+		var svg = d3.select("#chartarea");
+
+		svg.append("g")
+			 .attr("class", "x axis")
+			 .attr("transform", "translate(0," + c.height + ")")
+			 .call(c.xAxis);
+
+		svg.append("g")
+			 .attr("class", "y axis")
+			 .call(c.yAxis);
+	},
+	drawPlot: function(){
+
+		var svg = d3.select("#chartarea");
+		var dataset = c.alltsv;
+
+		var plotarea = svg.select('.plot-area')
+						.selectAll(".plots")
+		     			.data(dataset)
+
+		plotarea
+			.enter()
+			.append("circle")
+			.attr('class', 'plots')
+			.attr("r", 10);
+
+		plotarea.transition()
+			.duration(1000)
+			.attr("cx", function(d) {
+			return c.x(d[c.prop_arr[0]]);
+			})
+			.attr("cy", function(d) {
+			return c.y(d[c.prop_arr[1]]);
+			})
+
+	},
+	drawRegression: function(){
+
+		var regline = ss.linearRegression(c.data4line);
+		var mm = d3.extent(c.data4line, function(d){return d[0]});
+		var x1 = mm[0];
+		var y1 = regline.m * mm[0] + regline.b;
+		var x2 = mm[1];
+		var y2 = regline.m * mm[1] + regline.b;
+		var trendData = [[x1,y1,x2,y2]];
+
+		//相関係数
+		var correlation = ss.sampleCorrelation(c.correlation[0], c.correlation[1]);
+
+		var linearea = d3.select('.reg-area');
+		var trendline = linearea.selectAll(".trendline")
+			.data(trendData);
+
+		trendline.enter()
+			.append("line")
+			.attr("class", "trendline")
+			.attr("stroke", "black")
+			.attr("stroke-width", 1);
+			
+		trendline
+			.transition()
+			.duration(1000)
+			.attr("x1", function(d) { return c.x(d[0]); })
+			.attr("y1", function(d) { return c.y(d[1]); })
+			.attr("x2", function(d) { return c.x(d[2]); })
+			.attr("y2", function(d) { return c.y(d[3]); });
+
+
+		d3.selectAll("g.x.axis").call(c.xAxis)
+		d3.selectAll("g.y.axis").call(c.yAxis)
+
+		var str = ''
+		str += '<li><div>回帰直線:  <span class="outputinfo">y = '+ regline.m + 'x + ' + regline.b +'</span></div></li>';
+		str += '<li><div>相関係数:  <span class="outputinfo">'+ correlation  + '</span></div></li>';
+		$('#info').html(str);
+	},
+	getData: function(success){
+		d3.tsv("data.tsv", function(error, data) {
+			var prop = _.keys(data[0]).filter(function(d){return d!=='pref'});
+			data.forEach(function(d) {
+				prop.map(function(e){
+					d[e] = +d[e];
+				})
+			});
+
+			c.alltsv = data;
+
+
+			success();
+	  	});
+
+
+	},
+	filterData: function(prop){
+		var data = c.alltsv;
+		var x_arr = [];
+		var y_arr = [];
+		c.data4line = [];
+
+		c.prop_arr = prop || ['m13','m13'];
+		data.map(function(d){
+			c.data4line.push([d[c.prop_arr[0]], d[c.prop_arr[1]]]);
+			x_arr.push(d[c.prop_arr[0]]);
+			y_arr.push(d[c.prop_arr[1]]);
+		})
+		c.correlation = [x_arr, y_arr];
+	},
+	setSelectBox: function(){
+		var prop = _.keys(c.alltsv[0]);
+		var str = '';
+		prop.map(function(d){
+			if(d==='pref') return;
+			str += '<option value="'+d+'">'+ d +'</option>';
+		})
+		$('.xval').html(str);
+		$('.yval').html(str);
+
+	},
+	changeDataset: function(prop){
+		c.filterData(prop);
+		c.setAxis();
+		c.drawPlot()
+		c.drawRegression();
+	},
+	init: function(){
+		c.getData(function(){
+			c.filterData();
+			c.setSelectBox();
+			c.setChartArea();
+			c.setAxis();
+			c.drawAxis();
+			c.drawPlot()
+			c.drawRegression();
+		});
+		$('.xval').on('change', function(s){
+			var prop = [this.value, $('.yval').val()];
+			c.changeDataset(prop);
+		})
+		$('.yval').on('change', function(s){
+			var prop = [$('.xval').val(), this.value];
+			c.changeDataset(prop);
+		})
+	}
+
+}
+$(document).ready(function(){
+	c.init();
+})
+
+</script>
+</html>
