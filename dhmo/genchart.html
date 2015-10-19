@@ -156,6 +156,8 @@
 				</p>
 				<p>show r table ボタンを押すと、相関係数0.6以上の組み合わせを一覧にして表示します。処理が重いのでPC推奨です。
 				</p>
+				<p>表をドラッグ選択してExcelに貼り付けるとこともできますので、是非ご活用下さい。
+				</p>
 				<h4>使用したデータに関して</h4>
 				<ul>
 					<li>統計局（2015）「統計でみる都道府県のすがた」</li>
@@ -181,7 +183,9 @@
 			<h4 class="modal-title" id="myModalLabel">相関係数の一覧</h4>
 			</div>
 			<div class="modal-body">
-				<p>一覧の作成にあたり、多少の演算時間がかかります。PC環境での実行をオススメ致します。
+				<p>相関係数の一覧を表示します。列に表示されているボタンを押すと、その値をセットして描画を行います。
+				</p>
+				<p>※一覧の作成にあたり、多少の演算時間がかかります。PC環境での実行をオススメ致します。
 				</p>
 			</div>
 			<div class="modal-footer">
@@ -265,6 +269,7 @@ var pref_arr =
 	{'id':47, 'pref':'沖縄県','color':'#f781bf'},
 ];
 var c = {
+	calcFlg: false,
 	setChartArea: function(){
 		var base = ~~($('#chart').width())
 		if(base >= 400){
@@ -423,7 +428,7 @@ var c = {
 		var data_arr = _.chunk(c.indexprop_arr, Math.ceil(c.indexprop_arr.length/2));
 		var str4table = ''
 		str4table += '<table class="table table-bordered table-hover" >'
-		str4table += '<thead><tr><th>x</th><th>y</th><th>r(>=0.6)</th></tr></thead>';
+		str4table += '<thead><tr><th>x</th><th>y</th><th>r(>=0.6)</th><th>button</th></tr></thead>';
 		str4table += '<tbody>'
 		// var str = 'x\ty\tr\t\n';
 		data_arr[0].map(function(e){
@@ -438,6 +443,9 @@ var c = {
 					str4table += '<td>'+ e.indexname +'</td>'
 					str4table += '<td>'+ d.indexname +'</td>'
 					str4table += '<td>'+ r_num +'</td>'
+					str4table += '<td><button type="button" class="btn btn btn-link btn-redraw" id="';
+					str4table += 'x'+e.id + 'y'+ d.id;
+					str4table += '">描画</button></td>'
 					// str += e.indexname + '\t' + d.indexname + '\t';
 					// str += r_num +'\n';
 					str4table += '</tr>'
@@ -464,7 +472,21 @@ var c = {
 		// console.log(str);
 		$('#modal4r .modal-body').html(str4table);
 		$('#modal4r').modal('show');
+		$('.btn-redraw').on('click', function(){
+			$('#confirmModal').modal('hide');
+			$('#modal4r').modal('hide');
+			c.setRValue(this.id);
+		})
+		c.calcFlg = true;
 
+	},
+	setRValue: function(id){
+		var x_prop = id.match(/x(n[0-9]{1,})/)[1];
+		var y_prop = id.match(/y(n[0-9]{1,})/)[1];
+
+		c.changeDataset([x_prop,y_prop]);
+		$('.xval .'+x_prop).prop('selected', true);
+		$('.yval .'+y_prop).prop('selected', true);
 	},
 	getData: function(success){
 		d3.tsv("./indexdata.tsv", function(error, data) {
@@ -580,7 +602,12 @@ var c = {
 				c.changeDataset(prop);
 			})
 			$('#showr').on('click', function(){
-				$('#confirmModal').modal('show');
+				if(c.calcFlg){
+					$('#modal4r').modal('show');
+				}else{
+					$('#confirmModal').modal('show');
+				}
+
 			})
 			$('#startClac').on('click', function(){
 				c.showRList();
@@ -591,7 +618,6 @@ var c = {
 			$('.close-r-modal').on('click', function(){
 				$('#confirmModal').modal('hide');
 			})
-
 		});
 
 	},
