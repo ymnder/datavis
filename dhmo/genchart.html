@@ -77,6 +77,9 @@
 			font-size: 11px;
 			/*opacity: 0.8;*/
 		}
+		body {
+			overflow: hidden;
+		}
 		line.trendline {
     		pointer-events: none;
 		}
@@ -90,9 +93,17 @@
 		.modal-body ul {
 		    margin-left: 30px;
 		}
+
 	</style>
 </head>
 <body>
+	<nav class="navbar navbar-default">
+		<div class="container-fluid">
+			<!-- <div class="navbar-header"> -->
+				<button type="button" id="showr" class="btn btn-default navbar-btn">show r table</button>
+			<!-- </div> -->
+		</div>
+	</nav>
 	<div class="page-header">
   		<h1>回帰直線と散布図</h1>
 		<p class="lead">データを選んで楽しく描画</p>
@@ -144,6 +155,8 @@
 			<div class="modal-body">
 				<h4>このサイトの使い方</h4>
 				<p>都道府県の統計資料を組み合わせて、散布図、回帰直線、回帰式を一括作成できます。また表示中のデータはページ下部のテーブルで確認できます。
+				</p>
+				<p>show r table ボタンを押すと、相関係数0.6以上の組み合わせを一覧にして表示します。処理が重いのでPC推奨です。
 				</p>
 				<h4>使用したデータに関して</h4>
 				<ul>
@@ -375,7 +388,11 @@ var c = {
 		var n = limit || [1, 0.6]
 		// var base_arr = ["n449","n450","n451","n452","n453","n454","n455","n456","n457","n458","n459","n460","n461","n462","n463","n464","n465","n466","n467","n468","n469","n470","n471","n472","n473","n474","n475","n476","n477","n478","n479","n480","n481","n482","n483","n484","n485","n486","n487","n488","n489","n490","n491","n492","n493","n494","n495","n496","n497","n498","n499","n500","n501","n502","n503","n504","n505"];
 		var data_arr = _.chunk(c.indexprop_arr, Math.ceil(c.indexprop_arr.length/2));
-		var str = 'x\ty\tr\t\n';
+		var str4table = ''
+		str4table += '<table class="table table-bordered table-hover" >'
+		str4table += '<thead><tr><th>x</th><th>y</th><th>r(>=0.6)</th></tr></thead>';
+		str4table += '<tbody>'
+		// var str = 'x\ty\tr\t\n';
 		data_arr[0].map(function(e){
 			data_arr[1].map(function(d){
 				if( d.indexname.indexOf(e.indexname.slice(0,3)) !== -1) return;
@@ -384,11 +401,18 @@ var c = {
 				var r_num = ss.sampleCorrelation(xdata, ydata);
 				if(n[1] <= r_num && r_num <= n[0] ){
 					// str += 'x: '+ xprop.indexname + ',y: ' + d.indexname + ',r: ';
-					str += e.indexname + '\t' + d.indexname + '\t';
-					str += r_num +'\n';
+					str4table += '<tr>'
+					str4table += '<td>'+ e.indexname +'</td>'
+					str4table += '<td>'+ d.indexname +'</td>'
+					str4table += '<td>'+ r_num +'</td>'
+					// str += e.indexname + '\t' + d.indexname + '\t';
+					// str += r_num +'\n';
+					str4table += '</tr>'
 				}
 			});
+
 		});
+		str4table += '</tbody></table>'
 		// base_arr.map(function(e){
 		// 	c.indexprop_arr.map(function(d){
 		// 		if(e===d.id) return;
@@ -404,7 +428,10 @@ var c = {
 		// 		}
 		// 	});
 		// });
-		console.log(str);
+		// console.log(str);
+
+		$('.modal-body').html(str4table);
+		$('#myModal').modal('show');
 
 	},
 	getData: function(success){
@@ -520,6 +547,9 @@ var c = {
 				var prop = [$('.xval').val(), this.value];
 				c.changeDataset(prop);
 			})
+			$('#showr').on('click', function(){
+				c.showRList();
+			})
 		});
 
 	},
@@ -561,7 +591,10 @@ var c = {
 
 			$('#table-area').html(str);
 		})
-	}
+	},
+	showRList: function(){
+		c.checkCorrelation();
+	},
 
 }
 $(document).ready(function(){
