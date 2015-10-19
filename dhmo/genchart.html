@@ -51,12 +51,16 @@
 		#chart {
 			text-align: center;
 		}
-		.container {
+		/*.container {
 			margin: 40px 0px;
-		}
+		}*/
 		.plots {
 			/*fill: orange;*/
 			opacity: 0.5;
+		}
+		.plots:hover {
+			/*fill: orange;*/
+			opacity: 1;
 		}
 		#tooltip{
 			position: absolute;
@@ -183,7 +187,7 @@ var c = {
 		}else{
 			$('#chart').width() * 0.8;
 		}
-		c.margin = {top: 20, right: 20, bottom: 30, left: 30};
+		c.margin = {top: 20, right: 20, bottom: 60, left: 60};
 		c.width = base - c.margin.left - c.margin.right,
 		c.height = base - c.margin.top - c.margin.bottom;
 		var svg = d3.select("#regplot")
@@ -197,12 +201,16 @@ var c = {
 		var dataset = c.alltsv;
 
 		c.x = d3.scale.linear()
+			// .domain([0, d3.max(dataset, function(d) { return d[c.prop_arr[0]]; })])
 			.domain(d3.extent(dataset, function(d) { return d[c.prop_arr[0]]; }))
 			.range([0, c.width]);
 
 		c.y = d3.scale.linear()
+			// .domain([0, d3.max(dataset, function(d) { return d[c.prop_arr[1]]; })])
 			.domain(d3.extent(dataset, function(d) { return d[c.prop_arr[1]]; }))
 			.range([c.height, 0]);
+
+
 
 		c.xAxis = d3.svg.axis()
 			.scale(c.x)
@@ -263,7 +271,7 @@ var c = {
 			.attr('fill', function(d){
 				return pref_arr.filter(function(e){ return e.pref === d.pref})[0].color;
 			})
-			.attr("r", 5)
+			.attr("r", 8)
 			.on("mouseover", function(d){
 				return tooltip.style("visibility", "visible").text(d.pref);
 			})
