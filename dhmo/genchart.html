@@ -167,6 +167,7 @@
 				</ul>
 				<p>※家計調査は[品目分類] 品目分類（平成22年改定）（総数：数量）を利用した。また、都道府県庁所在市を都道府県とみなした</p>
 				<p>※データが存在しない場合には空欄に置換した。</p>
+				<p>※回帰直線ならびに相関係数は、少数第５位を四捨五入した。</p>
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-default" data-dismiss="modal">閉じる</button>
@@ -269,6 +270,7 @@ var pref_arr =
 	{'id':47, 'pref':'沖縄県','color':'#f781bf'},
 ];
 var c = {
+	roundnum: 4,
 	calcFlg: false,
 	setChartArea: function(){
 		var base = ~~($('#chart').width())
@@ -418,8 +420,8 @@ var c = {
 		d3.selectAll("g.y.axis").call(c.yAxis)
 
 		var str = ''
-		str += '<li><div>回帰直線:  <strong>y = '+ regline.m + 'x + ' + regline.b +'</strong></div></li>';
-		str += '<li><div>相関係数:  <strong>'+ correlation  + '</strong></div></li>';
+		str += '<li><div>回帰直線:  <strong>y = '+ _.round(regline.m, c.roundnum) + 'x + ' + _.round(regline.b, c.roundnum) +'</strong></div></li>';
+		str += '<li><div>相関係数:  <strong>'+ _.round(correlation, c.roundnum)  + '</strong></div></li>';
 		$('#info').html(str);
 	},
 	checkCorrelation: function(limit){
@@ -442,7 +444,7 @@ var c = {
 					str4table += '<tr>'
 					str4table += '<td>'+ e.indexname +'</td>'
 					str4table += '<td>'+ d.indexname +'</td>'
-					str4table += '<td>'+ r_num +'</td>'
+					str4table += '<td>'+ _.round(r_num, c.roundnum) +'</td>'
 					str4table += '<td><button type="button" class="btn btn btn-link btn-redraw" id="';
 					str4table += 'x'+e.id + 'y'+ d.id;
 					str4table += '">描画</button></td>'
