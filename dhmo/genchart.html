@@ -26,9 +26,12 @@
 		    padding-top: 20px;
 		    padding-bottom: 10px;
 		}
-
+		#myModalLabel {
+		    text-align: center;
+		}
 		#select-box-are {
     		margin-bottom: 20px;
+		    text-align: center;
 		}
 		.table {
 			width: 80%;
@@ -80,6 +83,13 @@
 		.page-header {
 			text-align: center;
 		}
+		.modal-body p {
+			margin-right: 30px;
+			margin-left: 30px;
+		}
+		.modal-body ul {
+		    margin-left: 30px;
+		}
 	</style>
 </head>
 <body>
@@ -121,6 +131,32 @@
 			<h5 class="">選択したデータ表</h5>
 		</div> -->
 		<table class="table table-bordered table-hover" id="table-area"></table>
+		<!-- <button type="button" id="modalbutton" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myModal">データについて</button> -->
+	</div>
+	<!-- Modal -->
+	<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+		<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+			<h4 class="modal-title" id="myModalLabel">相関チェッカー</h4>
+			</div>
+			<div class="modal-body">
+				<h4>このサイトの使い方</h4>
+				<p>都道府県の統計資料を組み合わせて、散布図、回帰直線、回帰式を一括作成できます。また表示中のデータはページ下部のテーブルで確認できます。
+				</p>
+				<h4>使用したデータに関して</h4>
+				<ul>
+					<li>統計局（2015）「統計でみる都道府県のすがた」</li>
+					<li>統計局（2015）「統計でみる都道府県のすがた」</li>
+					<li>統計局（2015）「統計でみる都道府県のすがた」</li>
+				</ul>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">閉じる</button>
+			</div>
+		</div>
+		</div>
 	</div>
 	<footer class="footer">
       <div class="container">
@@ -252,7 +288,7 @@ var c = {
 			.text("y")
 			;
 		svg.append("svg:path")
-		.attr("d", d3.svg.symbol().type("triangle-up"));
+			.attr("d", d3.svg.symbol().type("triangle-up"));
 	},
 	drawPlot: function(){
 
@@ -411,6 +447,7 @@ var c = {
 		$('#table-area').html(str);
 	},
 	init: function(){
+		$('#myModal').modal('show');
 		c.getPropData(function(){
 			c.getData(function(){
 
