@@ -153,6 +153,7 @@
 					<li>統計局（2014）「家計調査」</li>
 				</ul>
 				<p>※家計調査は[品目分類] 品目分類（平成22年改定）（総数：数量）を利用した。また、都道府県庁所在市を都道府県とみなした</p>
+				<p>※データが存在しない場合には空欄に置換した。</p>
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-default" data-dismiss="modal">閉じる</button>
@@ -375,7 +376,11 @@ var c = {
 			var prop = _.keys(data[0]).filter(function(d){return d!=='pref'});
 			data.forEach(function(d) {
 				prop.map(function(e){
-					d[e] = +d[e];
+					if(isFinite(d[e])){
+						d[e] = +d[e];
+					}else{
+						d[e] = '';
+					}
 				})
 				d.pref_id = pref_arr.filter(function(e){return e.pref === d.pref})[0].id;
 			});
@@ -407,9 +412,9 @@ var c = {
 		// var prop = _.keys(c.alltsv[0]);
 		var prop_arr = c.indexprop_arr;
 		var str = '';
-		prop_arr.map(function(d){
+		prop_arr.map(function(d,i){
 			// if(d.indexOf('pref')===0) return;
-			str += '<option value="'+d.id+'">'+ d.indexname;
+			str += '<option class="'+d.id+'" value="'+d.id+'">'+ (i+1)+'. '+d.indexname;
 			if(d.unit){
 				str += '（' +d.unit +'）'
 			}
@@ -468,6 +473,8 @@ var c = {
 				c.drawPlot()
 				c.drawRegression();
 				c.showTable()
+				$('.xval .'+c.prop_arr[0]).prop('selected', true);
+				$('.yval .'+c.prop_arr[1]).prop('selected', true);
 			});
 			$('.xval').on('change', function(s){
 				var prop = [this.value, $('.yval').val()];
