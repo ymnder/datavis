@@ -413,11 +413,44 @@ var c = {
 			var prop = [$('.xval').val(), this.value];
 			c.changeDataset(prop);
 		})
+	},
+	makeProplist: function(){
+		//use this func make property lists
+		d3.tsv('./proplists.tsv',function(err, tsv){
+			var str = ''
+			str += '<thead><tr>'
+			str += '<th>id</th><th>indexname</th><th>unit</th><th>year</th>';
+			str += '</tr></thead>';
+			str += '<tbody>'
+
+			tsv.map(function(d){
+				str += '<tr>'
+				str += '<th scope="row">'+d.id+'</th>'
+				str += '<td>' + d.name1;
+				if(d.name2){
+					str += d.name2;
+				}
+				if(d.name3){
+					str += d.name3;
+				}
+				if(d.name4){
+					str += d.name4;
+				}
+				str += '</td>'
+				str += '<td>'+d.unit+'</td>'
+				str += '<td>'+d.year+'</td>'
+				str += '</tr>'
+			});
+			str += '</tbody>'
+
+			$('#table-area').html(str);
+		})
 	}
 
 }
 $(document).ready(function(){
 	c.init();
+
 })
 
 </script>
