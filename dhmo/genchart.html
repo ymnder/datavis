@@ -407,7 +407,14 @@ var c = {
 		var str = '';
 		prop_arr.map(function(d){
 			// if(d.indexOf('pref')===0) return;
-			str += '<option value="'+d.id+'">'+ d.indexname +'</option>';
+			str += '<option value="'+d.id+'">'+ d.indexname;
+			if(d.unit){
+				str += '（' +d.unit +'）'
+			}
+			if(d.year){
+				str += '（' +d.year +'年）'
+			}
+			str += '</option>';
 		})
 		$('.xval').html(str);
 		$('.yval').html(str);
