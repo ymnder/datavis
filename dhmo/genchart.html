@@ -6,10 +6,12 @@
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+	<link rel="stylesheet" href="./css/style.css" >
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 	<script src="http://d3js.org/d3.v3.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.23.5/js/jquery.tablesorter.js" charset="utf-8"></script>
+	<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.23.5/js/jquery.tablesorter.js" charset="utf-8"></script> -->
+	<script src="./js/jquery.tablesorter.js" charset="utf-8"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/simple-statistics/1.0.0/simple_statistics.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.10.1/lodash.min.js"></script>
 	<style media="screen">
@@ -91,7 +93,7 @@
 		.modal-body ul {
 		    margin-left: 30px;
 		}
-		
+
 		/* font-size*/
 		table {
 			font-size: 60%;
@@ -110,6 +112,31 @@
 		}
 		.select-val {
 			font-size: 80%;
+		}
+		/* for table sort*/
+		table.tablesorter thead tr .header {
+			background-image: url(./css/bg.gif);
+			background-repeat: no-repeat;
+			background-position: center right;
+			cursor: pointer;
+		}
+		table.tablesorter tbody td {
+			color: #3D3D3D;
+			padding: 4px;
+			background-color: #FFF;
+			vertical-align: top;
+		}
+		table.tablesorter thead tr .headerSortUp {
+			background-image: url(./css/asc.gif);
+		}
+		table.tablesorter thead tr .headerSortDown {
+			background-image: url(./css/desc.gif);
+		}
+		table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSortUp {
+			background-color: #8dbdd8;
+		}
+		#sortTable thead tr th:nth-child(3) {
+		    width: 15%;
 		}
 
 	</style>
@@ -450,7 +477,7 @@ var c = {
 		// var base_arr = ["n449","n450","n451","n452","n453","n454","n455","n456","n457","n458","n459","n460","n461","n462","n463","n464","n465","n466","n467","n468","n469","n470","n471","n472","n473","n474","n475","n476","n477","n478","n479","n480","n481","n482","n483","n484","n485","n486","n487","n488","n489","n490","n491","n492","n493","n494","n495","n496","n497","n498","n499","n500","n501","n502","n503","n504","n505"];
 		var data_arr = _.chunk(c.indexprop_arr, Math.ceil(c.indexprop_arr.length/2));
 		var str4table = ''
-		str4table += '<table id="sortTable" class="table table-bordered table-hover" >'
+		str4table += '<table id="sortTable" class="table table-bordered table-hover tablesorter" >'
 		str4table += '<thead><tr><th>x</th><th>y</th><th>r(>=0.6)</th><th>button</th></tr></thead>';
 		str4table += '<tbody>'
 		// var str = 'x\ty\tr\t\n';
@@ -505,7 +532,9 @@ var c = {
 				// 1: { sorter: false },
 				// 2: { sorter: false },
 				3: { sorter: false }
-			}
+			},
+			sortList: [[2,0]]
+
 		});
 		c.calcFlg = true;
 
