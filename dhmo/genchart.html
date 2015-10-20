@@ -32,7 +32,7 @@
 		#myModalLabel {
 		    text-align: center;
 		}
-		#select-box-are {
+		.select-box-are {
     		margin-bottom: 20px;
 		    text-align: center;
 		}
@@ -56,6 +56,9 @@
 		}
 		#chart {
 			text-align: center;
+		}
+		#singleModal table {
+			margin-top: 10px;
 		}
 		/*.container {
 			margin: 40px 0px;
@@ -135,7 +138,7 @@
 		table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSortUp {
 			background-color: #8dbdd8;
 		}
-		#sortTable thead tr th:nth-child(3) {
+		.sortTable thead tr th:nth-child(3) {
 		    width: 15%;
 		}
 
@@ -146,8 +149,8 @@
 		<div class="container-fluid">
 			<!-- <div class="navbar-header"> -->
 				<button type="button" id="showr" class="btn btn-default navbar-btn">show r table</button>
-				<button type="button" id="aboutdata" class="btn btn-default navbar-btn">データについて</button>
 				<button type="button" id="compare" class="btn btn-default navbar-btn">compare</button>
+				<button type="button" id="aboutdata" class="btn btn-default navbar-btn">データについて</button>
 			<!-- </div> -->
 		</div>
 	</nav>
@@ -156,7 +159,7 @@
 		<p class="lead">データを選んで楽しく描画</p>
 	</div>
 	<div class="container">
-		<div id="select-box-are">
+		<div class="select-box-are">
 			<div class="form-inline">
 			  <!-- <div class="form-group"> -->
 			    <div class="input-group">
@@ -255,9 +258,10 @@
 		<div class="modal-content">
 			<div class="modal-header">
 				<button type="button" class="close close-r-modal" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-			<h4 class="modal-title" id="myModalLabel">相関係数の一覧</h4>
+				<h4 class="modal-title" id="myModalLabel">相関係数の一覧</h4>
 			</div>
 			<div class="modal-body">
+				<div class='modaltable'></div>
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-default close-r-modal" data-dismiss="modal">閉じる</button>
@@ -268,17 +272,26 @@
 	<!-- Modal -->
 	<div class="modal fade" id="singleModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
 		<div class="modal-dialog" role="document">
-		<div class="modal-content">
-			<div class="modal-header">
-				<button type="button" class="close close-r-modal" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-			<h4 class="modal-title" id="myModalLabel">相関係数の一覧</h4>
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close close-r-modal" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="myModalLabel">相関係数の簡易比較</h4>
+				</div>
+				<div class="modal-body">
+					<div class="select-box-are">
+						<div class="form-inline">
+							<div class="input-group">
+							  <div class="input-group-addon">base</div>
+							  <select class="compareval select-val form-control" name="compareval"></select>
+							</div>
+					  </div>
+					<div class='modaltable'></div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default close-r-modal" data-dismiss="modal">閉じる</button>
+				</div>
 			</div>
-			<div class="modal-body">
 			</div>
-			<div class="modal-footer">
-				<button type="button" class="btn btn-default close-r-modal" data-dismiss="modal">閉じる</button>
-			</div>
-		</div>
 		</div>
 	</div>
 	<footer class="footer">
@@ -493,12 +506,13 @@ var c = {
 		str += '<li><div>相関係数:  <strong>'+ _.round(correlation, c.roundnum)  + '</strong></div></li>';
 		$('#info').html(str);
 	},
-	checkCorrelation: function(limit){
+	checkCorrelation: function(limit, target, arr){
 		var n = limit || [1, 0.6]
+		var target_id = target || 'modal4r';
 		// var base_arr = ["n449","n450","n451","n452","n453","n454","n455","n456","n457","n458","n459","n460","n461","n462","n463","n464","n465","n466","n467","n468","n469","n470","n471","n472","n473","n474","n475","n476","n477","n478","n479","n480","n481","n482","n483","n484","n485","n486","n487","n488","n489","n490","n491","n492","n493","n494","n495","n496","n497","n498","n499","n500","n501","n502","n503","n504","n505"];
-		var data_arr = _.chunk(c.indexprop_arr, Math.ceil(c.indexprop_arr.length/2));
+		var data_arr = [arr, c.indexprop_arr] || _.chunk(c.indexprop_arr, Math.ceil(c.indexprop_arr.length/2));
 		var str4table = ''
-		str4table += '<table id="sortTable" class="table table-bordered table-hover tablesorter" >'
+		str4table += '<table id="" class="table table-bordered table-hover tablesorter sortTable" >'
 		str4table += '<thead><tr><th>x</th><th>y</th><th>r(>=0.6)</th><th>button</th></tr></thead>';
 		str4table += '<tbody>'
 		// var str = 'x\ty\tr\t\n';
@@ -541,20 +555,20 @@ var c = {
 		// 	});
 		// });
 		// console.log(str);
-		$('#modal4r .modal-body').html(str4table);
-		$('#modal4r').modal('show');
+		$('#'+target_id+' .modal-body .modaltable').html(str4table);
+		$('#'+target_id).modal('show');
 		$('.btn-redraw').on('click', function(){
 			$('#confirmModal').modal('hide');
-			$('#modal4r').modal('hide');
+			$('#'+target_id).modal('hide');
 			c.setRValue(this.id);
 		})
-		$('#sortTable').tablesorter({
+		$('.sortTable').tablesorter({
 			headers: {
 				// 1: { sorter: false },
 				// 2: { sorter: false },
 				3: { sorter: false }
 			},
-			sortList: [[2,0]]
+			sortList: [[2,1]]
 
 		});
 		c.calcFlg = true;
@@ -622,6 +636,7 @@ var c = {
 		})
 		$('.xval').html(str);
 		$('.yval').html(str);
+		$('.compareval').html(str);
 
 	},
 	changeDataset: function(prop){
@@ -700,6 +715,11 @@ var c = {
 			})
 			$('#compare').on('click', function(){
 				$('#singleModal').modal('show');
+			})
+			$('.compareval').on('change', function(){
+				var val = this.value;
+				var arr = _.filter(c.indexprop_arr, function(n){return n.id === val;});
+				c.checkCorrelation(null, 'singleModal', arr);
 			})
 		});
 
