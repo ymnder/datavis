@@ -513,7 +513,8 @@ var c = {
 		var n = limit || [1, 0.6]
 		var target_id = target || 'modal4r';
 		// var base_arr = ["n449","n450","n451","n452","n453","n454","n455","n456","n457","n458","n459","n460","n461","n462","n463","n464","n465","n466","n467","n468","n469","n470","n471","n472","n473","n474","n475","n476","n477","n478","n479","n480","n481","n482","n483","n484","n485","n486","n487","n488","n489","n490","n491","n492","n493","n494","n495","n496","n497","n498","n499","n500","n501","n502","n503","n504","n505"];
-		var data_arr = [arr, c.indexprop_arr] || _.chunk(c.indexprop_arr, Math.ceil(c.indexprop_arr.length/2));
+		// var data_arr = [arr, c.indexprop_arr] || _.chunk(c.indexprop_arr, Math.ceil(c.indexprop_arr.length/2));
+		var data_arr = arr ? [arr, c.indexprop_arr] : _.chunk(c.indexprop_arr, Math.ceil(c.indexprop_arr.length/2)); ;
 		var str4table = ''
 		str4table += '<table id="" class="table table-bordered table-hover tablesorter sortTable" >'
 		str4table += '<thead><tr><th>x</th><th>y</th><th>r(>=0.6)</th><th>button</th></tr></thead>';
@@ -613,7 +614,7 @@ var c = {
 		var y_arr = [];
 		c.data4line = [];
 
-		c.prop_arr = prop || ['n220','n448'];
+		c.prop_arr = prop || ['n543','n317'];
 
 		data.map(function(d){
 			c.data4line.push([d[c.prop_arr[0]], d[c.prop_arr[1]]]);
