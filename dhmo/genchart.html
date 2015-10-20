@@ -147,6 +147,7 @@
 			<!-- <div class="navbar-header"> -->
 				<button type="button" id="showr" class="btn btn-default navbar-btn">show r table</button>
 				<button type="button" id="aboutdata" class="btn btn-default navbar-btn">データについて</button>
+				<button type="button" id="compare" class="btn btn-default navbar-btn">compare</button>
 			<!-- </div> -->
 		</div>
 	</nav>
@@ -204,6 +205,8 @@
 				</p>
 				<p>show r table ボタンを押すと、相関係数0.6以上の組み合わせを一覧にして表示します。処理が重いのでPC推奨です。
 				</p>
+				<p>スマホ向けの軽量な操作として、compare機能を追加しました。
+				</p>
 				<p>表をドラッグ選択してExcelに貼り付けるとこともできますので、是非ご活用下さい。
 				</p>
 				<h5>使用したデータに関して</h5>
@@ -214,7 +217,7 @@
 					<li>統計局（2014）「家計調査」</li>
 				</ul>
 				<p>※家計調査は[品目分類] 品目分類（平成22年改定）（総数：数量）を利用した。また、都道府県庁所在市を都道府県とみなした</p>
-				<p>※データが存在しない場合には空欄に置換した。</p>
+				<p>※データが存在しない場合には空欄に置換した。また、計算結果にはNaNが表示されます。</p>
 				<p>※回帰直線ならびに相関係数は、少数第５位を四捨五入した。</p>
 			</div>
 			<div class="modal-footer">
@@ -236,6 +239,7 @@
 				</p>
 				<p>※一覧の作成にあたり、多少の演算時間がかかります。PC環境での実行をオススメ致します。
 				</p>
+				<p>※compare機能もありますので、そちらもどうぞ</p>
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn btn-danger" id='startClac'>実行する</button>
@@ -246,6 +250,22 @@
 	</div>
 	<!-- Modal -->
 	<div class="modal fade" id="modal4r" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+		<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close close-r-modal" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+			<h4 class="modal-title" id="myModalLabel">相関係数の一覧</h4>
+			</div>
+			<div class="modal-body">
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default close-r-modal" data-dismiss="modal">閉じる</button>
+			</div>
+		</div>
+		</div>
+	</div>
+	<!-- Modal -->
+	<div class="modal fade" id="singleModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
 		<div class="modal-dialog" role="document">
 		<div class="modal-content">
 			<div class="modal-header">
@@ -676,6 +696,9 @@ var c = {
 			})
 			$('.close-r-modal').on('click', function(){
 				$('#confirmModal').modal('hide');
+			})
+			$('#compare').on('click', function(){
+				$('#singleModal').modal('show');
 			})
 		});
 
