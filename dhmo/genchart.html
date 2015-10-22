@@ -702,7 +702,11 @@ var c = {
 			})
 			$('#showr').on('click', function(){
 				if(c.calcFlg){
-					$('#modal4r').modal('show');
+					if($('#modal4r .modaltable table')[0] === undefined){
+						$('#confirmModal').modal('show');
+					}else{
+						$('#modal4r').modal('show');
+					}
 				}else{
 					$('#confirmModal').modal('show');
 				}
