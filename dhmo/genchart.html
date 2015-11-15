@@ -481,6 +481,10 @@ var c = {
 
 		//相関係数
 		var correlation = ss.sampleCorrelation(c.correlation[0], c.correlation[1]);
+		//t
+		var t = ss.tTestTwoSample(c.correlation[0], c.correlation[1]);
+		//共分散
+		var cov = ss.sampleCovariance(c.correlation[0], c.correlation[1]);
 
 		var linearea = d3.select('.reg-area');
 		var trendline = linearea.selectAll(".trendline")
@@ -589,16 +593,19 @@ var c = {
 	getData: function(success){
 		d3.tsv("./indexdata.tsv", function(error, data) {
 			var prop = _.keys(data[0]).filter(function(d){return d!=='pref'});
+			var lackdata_prop = [];
 			data.forEach(function(d) {
 				prop.map(function(e){
 					if(isFinite(d[e])){
 						d[e] = +d[e];
 					}else{
 						d[e] = '';
+						lackdata_prop.push(e);
 					}
 				})
 				d.pref_id = pref_arr.filter(function(e){return e.pref === d.pref})[0].id;
 			});
+			c.lackdata_prop = _.uniq(lackdata_prop);
 
 			c.alltsv = _.sortByOrder(data, 'pref_id')
 
@@ -612,16 +619,35 @@ var c = {
 		var data = c.alltsv;
 		var x_arr = [];
 		var y_arr = [];
+		var x_arr_lack = [];
+		var y_arr_lack = [];
 		c.data4line = [];
+		c.data4line_lack = [];
 
 		c.prop_arr = prop || ['n543','n317'];
+
+		c.prop_arr.map(function(d){
+			var prop = c.lackdata_prop.filter(function(e){return e === d})[0];
+			if(prop){
+				c.lack_flg = true;
+				return
+			}
+		})
 
 		data.map(function(d){
 			c.data4line.push([d[c.prop_arr[0]], d[c.prop_arr[1]]]);
 			x_arr.push(d[c.prop_arr[0]]);
 			y_arr.push(d[c.prop_arr[1]]);
+			if(c.lack_flg){
+				if(d[c.prop_arr[0]]!==''&&d[c.prop_arr[0]]!==''){
+					c.data4line_lack.push([d[c.prop_arr[0]], d[c.prop_arr[1]]]);
+					x_arr_lack.push(d[c.prop_arr[0]]);
+					y_arr_lack.push(d[c.prop_arr[1]]);
+				}
+			}
 		})
 		c.correlation = [x_arr, y_arr];
+		c.correlation_lack = [x_arr_lack, y_arr_lack];
 	},
 	setSelectBox: function(){
 		// var prop = _.keys(c.alltsv[0]);
