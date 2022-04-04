@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="jp">
+<head>
+	<meta charset="UTF-8">
+	<title>Discover confounding dataset</title>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+	<link rel="stylesheet" href="./css/style.css" >
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+	<script src="https://d3js.org/d3.v3.js"></script>
+	<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.23.5/js/jquery.tablesorter.js" charset="utf-8"></script> -->
+	<script src="./js/jquery.tablesorter.js" charset="utf-8"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/simple-statistics/1.0.0/simple_statistics.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.10.1/lodash.min.js"></script>
+	<style media="screen">
+		ul {
+			margin-bottom: 0px;
+			padding-left: 0px;
+		}
+		li {
+    		list-style: none;
+		}
+		footer {
+		    text-align: center;
+		    background-color: lightgray;
+		    margin-top: 20px;
+		    padding-top: 20px;
+		    padding-bottom: 10px;
+		}
+		#myModalLabel {
+		    text-align: center;
+		}
+		.select-box-are {
+    		margin-bottom: 20px;
+		    text-align: center;
+		}
+		.table {
+			width: 80%;
+			max-width: 80%;
+			margin: auto;
+		}
+		.highlight {
+		    padding: 9px 14px;
+		    margin-bottom: 14px;
+		    background-color: #f7f7f9;
+		    border: 1px solid #e1e1e8;
+		    border-radius: 4px;
+		}
+		.axis path,
+		.axis line {
+			fill: none;
+			stroke: black;
+			shape-rendering: crispEdges;
+		}
+		#chart {
+			text-align: center;
+		}
+		#singleModal table {
+			margin-top: 10px;
+		}
+		/*.container {
+			margin: 40px 0px;
+		}*/
+		.plots {
+			/*fill: orange;*/
+			opacity: 0.5;
+		}
+		.plots:hover {
+			/*fill: orange;*/
+			opacity: 1;
+		}
+		#tooltip{
+			position: absolute;
+			z-index: 10;
+			visibility: hidden;
+			padding: 5px;
+			/*border: 1px solid #000;*/
+			border-radius: 3px;
+			background-color: black;
+			color: white;
+			font-size: 11px;
+			/*opacity: 0.8;*/
+		}
+		line.trendline {
+    		pointer-events: none;
+		}
+		.page-header {
+			text-align: center;
+		}
+		.modal-body p {
+			margin-right: 30px;
+			margin-left: 30px;
+		}
+		.modal-body ul {
+		    margin-left: 30px;
+		}
+
+		/* font-size*/
+		table {
+			font-size: 60%;
+		}
+		.modal h5 {
+    		font-size: 90%;
+		}
+		.modal p {
+    		font-size: 80%;
+		}
+		.modal ul {
+			font-size: 80%;
+		}
+		.table button {
+			font-size: 80%;
+		}
+		.select-val {
+			font-size: 80%;
+		}
+		/* for table sort*/
+		table.tablesorter thead tr .header {
+			background-image: url(./css/bg.gif);
+			background-repeat: no-repeat;
+			background-position: center right;
+			cursor: pointer;
+		}
+		table.tablesorter tbody td {
+			color: #3D3D3D;
+			padding: 4px;
+			background-color: #FFF;
+			vertical-align: top;
+		}
+		table.tablesorter thead tr .headerSortUp {
+			background-image: url(./css/asc.gif);
+		}
+		table.tablesorter thead tr .headerSortDown {
+			background-image: url(./css/desc.gif);
+		}
+		table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSortUp {
+			background-color: #8dbdd8;
+		}
+		.sortTable thead tr th:nth-child(3) {
+		    width: 15%;
+		}
+
+	</style>
+</head>
+<body>
+	<nav class="navbar navbar-default">
+		<div class="container-fluid">
+			<!-- <div class="navbar-header"> -->
+				<button type="button" id="showr" class="btn btn-default navbar-btn">show r table</button>
+				<button type="button" id="compare" class="btn btn-default navbar-btn">compare</button>
+				<button type="button" id="aboutdata" class="btn btn-default navbar-btn">データについて</button>
+			<!-- </div> -->
+		</div>
+	</nav>
+	<div class="page-header">
+  		<h1>相関チェッカー</h1>
+		<p class="lead">データを選んで楽しく描画</p>
+	</div>
+	<div class="container">
+		<div class="select-box-are">
+			<div class="form-inline">
+			  <!-- <div class="form-group"> -->
+			    <div class="input-group">
+			      <div class="input-group-addon">x軸</div>
+			      <select class="xval select-val form-control" name="xval"></select>
+			    </div>
+				<div class="input-group">
+				  <div class="input-group-addon">y軸</div>
+				  <select class="yval select-val form-control" name="yval"></select>
+				</div>
+			  <!-- </div> -->
+		  </div>
+		</div>
+		<div class="highlight">
+			<ul id="info">
+			</ul>
+		</div>
+		<div id="chart">
+			<svg id="regplot">
+				<g id ="chartarea">
+					<g class="plot-area"></g>
+					<g class="reg-area"></g>
+				</g>
+			</svg>
+			<span id="tooltip"></span>
+		</div>
+	</div>
+	<div class="container">
+		<!-- <div class="highlight">
+			<h5 class="">選択したデータ表</h5>
+		</div> -->
+		<table class="table table-bordered table-hover" id="table-area"></table>
+		<!-- <button type="button" id="modalbutton" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myModal">データについて</button> -->
+	</div>
+	<!-- Modal -->
+	<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+		<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+			<h4 class="modal-title" id="myModalLabel">相関チェッカー</h4>
+			</div>
+			<div class="modal-body">
+				<h5>このサイトの使い方</h5>
+				<p>都道府県の統計資料を組み合わせて、散布図、回帰直線、回帰式を一括作成できます。また表示中のデータはページ下部のテーブルで確認できます。
+				</p>
+				<p>show r table ボタンを押すと、相関係数0.6以上の組み合わせを一覧にして表示します。処理が重いのでPC推奨です。
+				</p>
+				<p>スマホ向けの軽量な操作として、compare機能を追加しました。
+				</p>
+				<p>表をドラッグ選択してExcelに貼り付けるとこともできますので、是非ご活用下さい。
+				</p>
+				<h5>使用したデータに関して：収録順</h5>
+				<ul>
+					<li>統計局（2015）「統計でみる都道府県のすがた」</li>
+					<li>厚生労働省（2005）「各都道府県別の標準化死亡比について（男女別）」</li>
+					<li>厚生労働省（2012）「国民健康・栄養調査」</li>
+					<li>統計局（2014）「家計調査」</li>
+					<li>農林水産省（2014）「農業産出額及び生産農業所得（都道府県別） 」</li>
+					<li>経済産業省（2014）「工業統計調査　品目群による都道府県別出荷額」</li>
+					<li>日本ワイナリー協会（2012）「ワインの地域別・都道府県別消費数量」</li>
+					<li>全日本遊技事業協同組合連合会（2014）「遊技場店舗数、機械台数一覧表」</li>
+					<li>国立がん研究センター（2015）「都道府県別喫煙率」</li>
+					<li>全国自治宝くじ事務協議会（2014）「平成25年度・都道府県別高額当せん発生状況」</li>
+					<li>風俗行政研究会（2014）「都道府県別　許可・届出件数」</li>
+					<li>日本図書館協会（2015）「都道府県図書館の統計」</li>
+					<li>中央共同募金会（2015）「募金実績（1人あたり・1世帯あたり平均寄付額）」</li>
+					<li>厚生労働省（2014）「人口動態調査：都道府県別にみた年次別離婚率」</li>
+					<li>国税庁（2013）「都道府県別の販売（消費）数量」</li>
+				</ul>
+				<p>※家計調査は[品目分類] 品目分類（平成22年改定）（総数：数量）を利用した。また、都道府県庁所在市を都道府県とみなした</p>
+				<p>※データが存在しない場合には空欄に置換した。また、計算結果にはNaNが表示されます。</p>
+				<p>※回帰直線ならびに相関係数は、少数第５位を四捨五入した。</p>
+				<p>※交絡バイアスにくれぐれもご注意ください</p>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default" data-dismiss="modal">閉じる</button>
+			</div>
+		</div>
+		</div>
+	</div>
+	<!-- Modal -->
+	<div class="modal fade" id="confirmModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+		<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+			<h4 class="modal-title" id="myModalLabel">相関係数の一覧</h4>
+			</div>
+			<div class="modal-body">
+				<p>相関係数の一覧を表示します。列に表示されているボタンを押すと、その値をセットして描画を行います。
+				</p>
+				<p>※一覧の作成にあたり、多少の演算時間がかかります。PC環境での実行をオススメ致します。
+				</p>
+				<p>※compare機能もありますので、そちらもどうぞ</p>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn btn-danger" id='startClac'>実行する</button>
+				<button type="button" class="btn btn-default" data-dismiss="modal">閉じる</button>
+			</div>
+		</div>
+		</div>
+	</div>
+	<!-- Modal -->
+	<div class="modal fade" id="modal4r" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+		<div class="modal-dialog" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close close-r-modal" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="myModalLabel">相関係数の一覧</h4>
+			</div>
+			<div class="modal-body">
+				<div class='modaltable'></div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-default close-r-modal" data-dismiss="modal">閉じる</button>
+			</div>
+		</div>
+		</div>
+	</div>
+	<!-- Modal -->
+	<div class="modal fade" id="singleModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close close-r-modal" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+				<h4 class="modal-title" id="myModalLabel">相関係数の簡易比較</h4>
+				</div>
+				<div class="modal-body">
+					<div class="select-box-are">
+						<div class="form-inline">
+							<div class="input-group">
+							  <div class="input-group-addon">base</div>
+							  <select class="compareval select-val form-control" name="compareval"></select>
+							</div>
+					  </div>
+					<div class='modaltable'></div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default close-r-modal" data-dismiss="modal">閉じる</button>
+				</div>
+			</div>
+			</div>
+		</div>
+	</div>
+	<footer class="footer">
+      <div class="container">
+        <p class="text-muted">使用上の注意をよく読み、用法・用量を守って正しくお使い下さい。</p>
+      </div>
+    </footer>
+</body>
+<script>
+var pref_arr =
+[
+	{'id':1, 'pref':'北海道','color':'#e41a1c'},
+	{'id':2, 'pref':'青森県','color':'#377eb8'},
+	{'id':3, 'pref':'岩手県','color':'#377eb8'},
+	{'id':4, 'pref':'宮城県','color':'#377eb8'},
+	{'id':5, 'pref':'秋田県','color':'#377eb8'},
+	{'id':6, 'pref':'山形県','color':'#377eb8'},
+	{'id':7, 'pref':'福島県','color':'#377eb8'},
+	{'id':8, 'pref':'茨城県','color':'#4daf4a'},
+	{'id':9, 'pref':'栃木県','color':'#4daf4a'},
+	{'id':10, 'pref':'群馬県','color':'#4daf4a'},
+	{'id':11, 'pref':'埼玉県','color':'#4daf4a'},
+	{'id':12, 'pref':'千葉県','color':'#4daf4a'},
+	{'id':13, 'pref':'東京都','color':'#4daf4a'},
+	{'id':14, 'pref':'神奈川県','color':'#4daf4a'},
+	{'id':15, 'pref':'新潟県','color':'#984ea3'},
+	{'id':16, 'pref':'富山県','color':'#984ea3'},
+	{'id':17, 'pref':'石川県','color':'#984ea3'},
+	{'id':18, 'pref':'福井県','color':'#984ea3'},
+	{'id':19, 'pref':'山梨県','color':'#984ea3'},
+	{'id':20, 'pref':'長野県','color':'#984ea3'},
+	{'id':21, 'pref':'岐阜県','color':'#984ea3'},
+	{'id':22, 'pref':'静岡県','color':'#984ea3'},
+	{'id':23, 'pref':'愛知県','color':'#984ea3'},
+	{'id':24, 'pref':'三重県','color':'#ff7f00'},
+	{'id':25, 'pref':'滋賀県','color':'#ff7f00'},
+	{'id':26, 'pref':'京都府','color':'#ff7f00'},
+	{'id':27, 'pref':'大阪府','color':'#ff7f00'},
+	{'id':28, 'pref':'兵庫県','color':'#ff7f00'},
+	{'id':29, 'pref':'奈良県','color':'#ff7f00'},
+	{'id':30, 'pref':'和歌山県','color':'#ff7f00'},
+	{'id':31, 'pref':'鳥取県','color':'#ffff33'},
+	{'id':32, 'pref':'島根県','color':'#ffff33'},
+	{'id':33, 'pref':'岡山県','color':'#ffff33'},
+	{'id':34, 'pref':'広島県','color':'#ffff33'},
+	{'id':35, 'pref':'山口県','color':'#ffff33'},
+	{'id':36, 'pref':'徳島県','color':'#a65628'},
+	{'id':37, 'pref':'香川県','color':'#a65628'},
+	{'id':38, 'pref':'愛媛県','color':'#a65628'},
+	{'id':39, 'pref':'高知県','color':'#a65628'},
+	{'id':40, 'pref':'福岡県','color':'#f781bf'},
+	{'id':41, 'pref':'佐賀県','color':'#f781bf'},
+	{'id':42, 'pref':'長崎県','color':'#f781bf'},
+	{'id':43, 'pref':'熊本県','color':'#f781bf'},
+	{'id':44, 'pref':'大分県','color':'#f781bf'},
+	{'id':45, 'pref':'宮崎県','color':'#f781bf'},
+	{'id':46, 'pref':'鹿児島県','color':'#f781bf'},
+	{'id':47, 'pref':'沖縄県','color':'#f781bf'},
+];
+var c = {
+	roundnum: 4,
+	calcFlg: false,
+	setChartArea: function(){
+		var base = ~~($('#chart').width())
+		if(base >= 400){
+			base = 400;
+		}else{
+			$('#chart').width() * 0.8;
+		}
+		c.margin = {top: 20, right: 20, bottom: 60, left: 60};
+		c.width = base - c.margin.left - c.margin.right,
+		c.height = base - c.margin.top - c.margin.bottom;
+		var svg = d3.select("#regplot")
+			.attr("width", c.width + c.margin.left + c.margin.right)
+			.attr("height", c.height + c.margin.top + c.margin.bottom)
+			.select("#chartarea")
+			.attr("transform", "translate(" + c.margin.left + "," + c.margin.top + ")");
+	},
+	setAxis: function(){
+
+		var dataset = c.alltsv;
+
+		c.x = d3.scale.linear()
+			// .domain([0, d3.max(dataset, function(d) { return d[c.prop_arr[0]]; })])
+			.domain(d3.extent(dataset, function(d) { return d[c.prop_arr[0]]; }))
+			.range([0, c.width]);
+
+		c.y = d3.scale.linear()
+			// .domain([0, d3.max(dataset, function(d) { return d[c.prop_arr[1]]; })])
+			.domain(d3.extent(dataset, function(d) { return d[c.prop_arr[1]]; }))
+			.range([c.height, 0]);
+
+
+
+		c.xAxis = d3.svg.axis()
+			.scale(c.x)
+			.orient("bottom")
+			.outerTickSize(0)
+			.ticks(5);
+
+		c.yAxis = d3.svg.axis()
+			.scale(c.y)
+			.orient("left")
+			.outerTickSize(0)
+			.ticks(5);
+	},
+	drawAxis: function(){
+		var svg = d3.select("#chartarea");
+
+		svg.append("g")
+			.attr("class", "x axis")
+			.attr("transform", "translate(0," + c.height + ")")
+			.call(c.xAxis)
+			.append("text")
+			.attr("x", c.width-10)
+			.attr("y", -6)
+			.style("text-anchor", "end")
+			.text("x");
+
+		svg.append("svg:path")
+			.attr("transform", "translate("+ c.width+","+c.height+") rotate(90)")
+			.attr("d", d3.svg.symbol().type("triangle-up"));
+
+		svg.append("g")
+			.attr("class", "y axis")
+			.call(c.yAxis)
+			.append("text")
+			.attr("y", 6)
+			.attr("x", 15)
+			.attr("dy", ".71em")
+			.style("text-anchor", "end")
+			.text("y")
+			;
+		svg.append("svg:path")
+			.attr("d", d3.svg.symbol().type("triangle-up"));
+	},
+	drawPlot: function(){
+
+		var svg = d3.select("#chartarea");
+		var dataset = c.alltsv;
+
+		var tooltip = d3.select("#tooltip");
+		var plotarea = svg.select('.plot-area')
+						.selectAll(".plots")
+		     			.data(dataset)
+
+		plotarea
+			.enter()
+			.append("circle")
+			.attr('class', 'plots')
+			.attr('fill', function(d){
+				return pref_arr.filter(function(e){ return e.pref === d.pref})[0].color;
+			})
+			.attr("r", 8)
+			.on("mouseover", function(d){
+				return tooltip.style("visibility", "visible").text(d.pref);
+			})
+    		.on("mousemove", function(d){
+				return tooltip.style("top", (event.pageY-20)+"px").style("left",(event.pageX+10)+"px");
+			})
+    		.on("mouseout", function(d){
+				return tooltip.style("visibility", "hidden");
+			});
+
+		plotarea.transition()
+			.duration(1000)
+			.attr("cx", function(d) {
+			return c.x(d[c.prop_arr[0]]);
+			})
+			.attr("cy", function(d) {
+			return c.y(d[c.prop_arr[1]]);
+			})
+
+	},
+	drawRegression: function(){
+
+		var regline = ss.linearRegression(c.data4line);
+		var mm = d3.extent(c.data4line, function(d){return d[0]});
+		var x1 = mm[0];
+		var y1 = regline.m * mm[0] + regline.b;
+		var x2 = mm[1];
+		var y2 = regline.m * mm[1] + regline.b;
+		var trendData = [[x1,y1,x2,y2]];
+
+		//相関係数
+		var correlation = ss.sampleCorrelation(c.correlation[0], c.correlation[1]);
+		//t
+		var t = ss.tTestTwoSample(c.correlation[0], c.correlation[1]);
+		//共分散
+		var cov = ss.sampleCovariance(c.correlation[0], c.correlation[1]);
+
+		var linearea = d3.select('.reg-area');
+		var trendline = linearea.selectAll(".trendline")
+			.data(trendData);
+
+		trendline.enter()
+			.append("line")
+			.attr("class", "trendline")
+			.attr("stroke", "black")
+			.attr("stroke-width", 1);
+
+		trendline
+			.transition()
+			.duration(1000)
+			.attr("x1", function(d) { return c.x(d[0]); })
+			.attr("y1", function(d) { return c.y(d[1]); })
+			.attr("x2", function(d) { return c.x(d[2]); })
+			.attr("y2", function(d) { return c.y(d[3]); });
+
+
+		d3.selectAll("g.x.axis").call(c.xAxis)
+		d3.selectAll("g.y.axis").call(c.yAxis)
+
+		var str = ''
+		str += '<li><div>回帰直線:  <strong>y = '+ _.round(regline.m, c.roundnum) + 'x + ' + _.round(regline.b, c.roundnum) +'</strong></div></li>';
+		str += '<li><div>相関係数:  <strong>'+ _.round(correlation, c.roundnum)  + '</strong></div></li>';
+		$('#info').html(str);
+	},
+	checkCorrelation: function(limit, target, arr){
+		var n = limit || [1, 0.6]
+		var target_id = target || 'modal4r';
+		// var base_arr = ["n449","n450","n451","n452","n453","n454","n455","n456","n457","n458","n459","n460","n461","n462","n463","n464","n465","n466","n467","n468","n469","n470","n471","n472","n473","n474","n475","n476","n477","n478","n479","n480","n481","n482","n483","n484","n485","n486","n487","n488","n489","n490","n491","n492","n493","n494","n495","n496","n497","n498","n499","n500","n501","n502","n503","n504","n505"];
+		// var data_arr = [arr, c.indexprop_arr] || _.chunk(c.indexprop_arr, Math.ceil(c.indexprop_arr.length/2));
+		var data_arr = arr ? [arr, c.indexprop_arr] : _.chunk(c.indexprop_arr, Math.ceil(c.indexprop_arr.length/2)); ;
+		var str4table = ''
+		str4table += '<table id="" class="table table-bordered table-hover tablesorter sortTable" >'
+		str4table += '<thead><tr><th>x</th><th>y</th><th>r(>=0.6)</th><th>button</th></tr></thead>';
+		str4table += '<tbody>'
+		// var str = 'x\ty\tr\t\n';
+		data_arr[0].map(function(e){
+			data_arr[1].map(function(d){
+				if( d.indexname.indexOf(e.indexname.slice(0,3)) !== -1) return;
+				var xdata = c.alltsv.map(function(f){return f[e.id]});
+				var ydata = c.alltsv.map(function(f){return f[d.id]});
+				var r_num = ss.sampleCorrelation(xdata, ydata);
+				if(n[1] <= r_num && r_num <= n[0] ){
+					// str += 'x: '+ xprop.indexname + ',y: ' + d.indexname + ',r: ';
+					str4table += '<tr>'
+					str4table += '<td>'+ e.indexname +'</td>'
+					str4table += '<td>'+ d.indexname +'</td>'
+					str4table += '<td>'+ _.round(r_num, c.roundnum) +'</td>'
+					str4table += '<td><button type="button" class="btn btn btn-link btn-redraw" id="';
+					str4table += 'x'+e.id + 'y'+ d.id;
+					str4table += '">描画</button></td>'
+					// str += e.indexname + '\t' + d.indexname + '\t';
+					// str += r_num +'\n';
+					str4table += '</tr>'
+				}
+			});
+
+		});
+		str4table += '</tbody></table>'
+		// base_arr.map(function(e){
+		// 	c.indexprop_arr.map(function(d){
+		// 		if(e===d.id) return;
+		// 		var xdata = c.alltsv.map(function(f){return f[e]});
+		// 		var ydata = c.alltsv.map(function(f){return f[d.id]});
+		// 		var xprop = _.filter(c.indexprop_arr, function(f){return f.id === e})[0];
+		// 		var r_num = ss.sampleCorrelation(xdata, ydata)
+		// 		// if(Math.abs(r_num) >= n){
+		// 		if(n[1] <= Math.abs(r_num) && Math.abs(r_num) <= n[0] ){
+		// 			// str += 'x: '+ xprop.indexname + ',y: ' + d.indexname + ',r: ';
+		// 			str += xprop.indexname + '\t' + d.indexname + '\t';
+		// 			str += r_num +'\n';
+		// 		}
+		// 	});
+		// });
+		// console.log(str);
+		$('#'+target_id+' .modal-body .modaltable').html(str4table);
+		$('#'+target_id).modal('show');
+		$('.btn-redraw').on('click', function(){
+			$('#confirmModal').modal('hide');
+			$('#'+target_id).modal('hide');
+			c.setRValue(this.id);
+		})
+		$('.sortTable').tablesorter({
+			headers: {
+				// 1: { sorter: false },
+				// 2: { sorter: false },
+				3: { sorter: false }
+			},
+			sortList: [[2,1]]
+
+		});
+		c.calcFlg = true;
+
+	},
+	setRValue: function(id){
+		var x_prop = id.match(/x(n[0-9]{1,})/)[1];
+		var y_prop = id.match(/y(n[0-9]{1,})/)[1];
+
+		c.changeDataset([x_prop,y_prop]);
+		$('.xval .'+x_prop).prop('selected', true);
+		$('.yval .'+y_prop).prop('selected', true);
+	},
+	getData: function(success){
+		d3.tsv("./indexdata.tsv", function(error, data) {
+			var prop = _.keys(data[0]).filter(function(d){return d!=='pref'});
+			var lackdata_prop = [];
+			data.forEach(function(d) {
+				prop.map(function(e){
+					if(isFinite(d[e])){
+						d[e] = +d[e];
+					}else{
+						d[e] = '';
+						lackdata_prop.push(e);
+					}
+				})
+				d.pref_id = pref_arr.filter(function(e){return e.pref === d.pref})[0].id;
+			});
+			c.lackdata_prop = _.uniq(lackdata_prop);
+
+			c.alltsv = _.sortByOrder(data, 'pref_id')
+
+
+			success();
+	  	});
+
+
+	},
+	filterData: function(prop){
+		var data = c.alltsv;
+		var x_arr = [];
+		var y_arr = [];
+		var x_arr_lack = [];
+		var y_arr_lack = [];
+		c.data4line = [];
+		c.data4line_lack = [];
+
+		c.prop_arr = prop || ['n543','n317'];
+
+		c.prop_arr.map(function(d){
+			var prop = c.lackdata_prop.filter(function(e){return e === d})[0];
+			if(prop){
+				c.lack_flg = true;
+				return
+			}
+		})
+
+		data.map(function(d){
+			c.data4line.push([d[c.prop_arr[0]], d[c.prop_arr[1]]]);
+			x_arr.push(d[c.prop_arr[0]]);
+			y_arr.push(d[c.prop_arr[1]]);
+			if(c.lack_flg){
+				if(d[c.prop_arr[0]]!==''&&d[c.prop_arr[0]]!==''){
+					c.data4line_lack.push([d[c.prop_arr[0]], d[c.prop_arr[1]]]);
+					x_arr_lack.push(d[c.prop_arr[0]]);
+					y_arr_lack.push(d[c.prop_arr[1]]);
+				}
+			}
+		})
+		c.correlation = [x_arr, y_arr];
+		c.correlation_lack = [x_arr_lack, y_arr_lack];
+	},
+	setSelectBox: function(){
+		// var prop = _.keys(c.alltsv[0]);
+		var prop_arr = c.indexprop_arr;
+		var str = '';
+		prop_arr.map(function(d,i){
+			// if(d.indexOf('pref')===0) return;
+			str += '<option class="'+d.id+'" value="'+d.id+'">'+ (i+1)+'. '+d.indexname;
+			if(d.unit){
+				str += '（' +d.unit +'）'
+			}
+			if(d.year){
+				str += '（' +d.year +'年）'
+			}
+			str += '</option>';
+		})
+		$('.xval').html(str);
+		$('.yval').html(str);
+		$('.compareval').html(str);
+
+	},
+	changeDataset: function(prop){
+		c.filterData(prop);
+		c.setAxis();
+		c.drawPlot()
+		c.drawRegression();
+		c.showTable()
+	},
+	showTable: function(){
+		var str = ''
+		str += '<thead><tr>'
+		str += '<th>id</th><th>都道府県</th>';
+		str += '<th>'
+		str += _.filter(c.indexprop_arr, function(e){return e.id === c.prop_arr[0]})[0].indexname;
+		str += '</th>';
+		str += '<th>'
+		str += _.filter(c.indexprop_arr, function(e){return e.id === c.prop_arr[1]})[0].indexname;
+		str += '</th>';
+
+		str += '</tr></thead>';
+		str += '<tbody>'
+
+		c.alltsv.map(function(d){
+			str += '<tr>'
+			str += '<th scope="row">'+d.pref_id+'</th>'
+			str += '<td>'+d.pref+'</td>'
+			str += '<td>'+d[c.prop_arr[0]]+'</td>'
+			str += '<td>'+d[c.prop_arr[1]]+'</td>'
+			str += '</tr>'
+		});
+		str += '</tbody>'
+
+		$('#table-area').html(str);
+	},
+	init: function(){
+		$('#myModal').modal('show');
+		c.getPropData(function(){
+			c.getData(function(){
+
+				c.filterData();
+				c.setSelectBox();
+				c.setChartArea();
+				c.setAxis();
+				c.drawAxis();
+				c.drawPlot()
+				c.drawRegression();
+				c.showTable()
+				$('.xval .'+c.prop_arr[0]).prop('selected', true);
+				$('.yval .'+c.prop_arr[1]).prop('selected', true);
+			});
+			$('.xval').on('change', function(s){
+				var prop = [this.value, $('.yval').val()];
+				c.changeDataset(prop);
+			})
+			$('.yval').on('change', function(s){
+				var prop = [$('.xval').val(), this.value];
+				c.changeDataset(prop);
+			})
+			$('#showr').on('click', function(){
+				if(c.calcFlg){
+					if($('#modal4r .modaltable table')[0] === undefined){
+						$('#confirmModal').modal('show');
+					}else{
+						$('#modal4r').modal('show');
+					}
+				}else{
+					$('#confirmModal').modal('show');
+				}
+
+			})
+			$('#startClac').on('click', function(){
+				c.showRList();
+			})
+			$('#aboutdata').on('click', function(){
+				$('#myModal').modal('show');
+			})
+			$('.close-r-modal').on('click', function(){
+				$('#confirmModal').modal('hide');
+			})
+			$('#compare').on('click', function(){
+				$('#singleModal').modal('show');
+			})
+			$('.compareval').on('change', function(){
+				var val = this.value;
+				var arr = _.filter(c.indexprop_arr, function(n){return n.id === val;});
+				c.checkCorrelation(null, 'singleModal', arr);
+			})
+		});
+
+	},
+	getPropData: function(success){
+		d3.tsv('./indexprop.tsv',function(err, tsv){
+			c.indexprop_arr = tsv;
+
+			success();
+		});
+	},
+	makeProplist: function(){
+		//use this func make property lists
+		d3.tsv('./proplists.tsv',function(err, tsv){
+			var str = ''
+			str += '<thead><tr>'
+			str += '<th>id</th><th>indexname</th><th>unit</th><th>year</th>';
+			str += '</tr></thead>';
+			str += '<tbody>'
+
+			tsv.map(function(d){
+				str += '<tr>'
+				str += '<th scope="row">'+d.id+'</th>'
+				str += '<td>' + d.name1;
+				if(d.name2){
+					str += d.name2;
+				}
+				if(d.name3){
+					str += d.name3;
+				}
+				if(d.name4){
+					str += d.name4;
+				}
+				str += '</td>'
+				str += '<td>'+d.unit+'</td>'
+				str += '<td>'+d.year+'</td>'
+				str += '</tr>'
+			});
+			str += '</tbody>'
+
+			$('#table-area').html(str);
+		})
+	},
+	showRList: function(){
+		c.checkCorrelation();
+	},
+
+}
+$(document).ready(function(){
+	c.init();
+
+})
+
+</script>
+</html>
